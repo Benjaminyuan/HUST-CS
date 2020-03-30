@@ -1,0 +1,129 @@
+.386
+DATA	SEGMENT	USE16
+BUF	DB	50
+	DB	0
+	DB	50	DUP(0)	
+BUF1	DB	50
+	DB	0
+	DB	50	DUP(0)	
+CRLF1	DB	0DH,0AH,"WELCOME TO HUTS SHOP!$"
+CRLF2	DB	0DH,0AH,"INPUT USE'S NAME!$"
+CRLF3	DB	0DH,0AH,"INPUT PASSWORD!$"
+CRLF4	DB	0DH,0AH,"INPUT THE GOODS!$"
+CRLF5   DB	0DH,0AH,"HELLO BOSS!$"
+CRLF6   DB	0DH,0AH,"HELLO CUSTOMER!$"
+CRLF7   DB	0DH,0AH,"HELLO !$"
+CRLF8   DB	0DH,0AH,"FIND GOODS !$"
+CRLF9   DB	0DH,0AH,"THIS GOODS IS A !$"
+CRLF10  DB	0DH,0AH,"THIS GOODS IS B !$"
+CRLF11  DB	0DH,0AH,"THIS GOODS IS C !$"
+CRLF12  DB	0DH,0AH,"THIS GOODS IS F !$"
+BNAME DB "LI HUIJUN",0
+BPASS DB "TEST",0,0
+N EQU 1000
+M EQU 1000
+SNAME DB "SHOP",0,0,0,0,0,0
+GA1 DB "PEN" ,7 DUP(0),10
+	DW 35,56,2000,25,?
+GA2	DB "BOOK",6 DUP(0),9
+	DW 12,30,2000,5,?
+GAN DB N-2 DUP("TEMP-VALUE",8,15,0,20,0,30,0,2,0,?,?)
+COUNT DW 5000
+DATA ENDS
+STACK SEGMENT USE16 STACK
+	DB 500 DUP(0)
+STACK ENDS
+CODE SEGMENT USE16
+	ASSUME DS:DATA,SS:STACK,CS:CODE
+
+；增加的显示时间子程序
+
+	DISPTIME PROC        ;显示秒和百分秒，精度为55MS。(未保护AX寄存器)
+    LOCAL TIMESTR[8]:BYTE     ;0,0,'"',0,0,0DH,0AH,'$'
+
+         PUSH CX
+         PUSH DX         
+         PUSH DS
+         PUSH SS
+         POP  DS
+         MOV  AH,2CH 
+         INT  21H
+         XOR  AX,AX
+         MOV  AL,DH
+         MOV  CL,10
+         DIV  CL
+         ADD  AX,3030H
+         MOV  WORD PTR TIMESTR,AX
+         MOV  TIMESTR+2,'"'
+         XOR  AX,AX
+         MOV  AL,DL
+         DIV  CL
+         ADD  AX,3030H
+         MOV  WORD PTR TIMESTR+3,AX
+         MOV  WORD PTR TIMESTR+5,0A0DH
+         MOV  TIMESTR+7,'$'    
+         LEA  DX,TIMESTR  
+         MOV  AH,9
+         INT  21H    
+         POP  DS 
+         POP  DX
+         POP  CX
+         RET
+DISPTIME	ENDP
+
+START: MOV AX,DATA
+	   MOV DS,AX
+
+	   ;网店名称
+	   LEA DX,CRLF1
+	   MOV AH,9
+	   INT 21H
+
+	.
+	.  输入用户名、密码、商品名同实验一任务五
+	.
+	.
+ ;计算推荐度
+GO2 : CALL DISPTIME
+GO1:   
+       MOV CX,1000
+GO:	   LEA BX ,GA1
+	   MOV DI,21
+	   MOV AL ,[BX+DI-10];折扣
+	   CBW
+	   MOV SI,AX
+	   MOV AX,[BX+DI-7]
+	   MUL SI
+	   MOV SI,10
+	   MOV DX,0
+	   DIV SI
+	   MOV SI,AX;实际销售价格
+	   MOV AX ,[BX+DI-9];进货价
+	   MOV DX,0
+	   DIV SI;进货价/实际销售价
+	   MOV SI,AX
+	   MOV AX ,[BX+DI-3];已售数量
+	   MOV BP,[BX+DI-5];进货总量
+	   MOV DX,0
+	   DIV BP;已售数量/进货总量
+	   ADD AX,SI
+	   MOV SI,64
+       MUI SI
+MOV SI,2
+       MUI SI
+	   MOV [BX+DI-1],AX 
+	   ADD DI,21
+	   MOV AX ,[BX+DI-3];已售数量
+	   DEC AX
+	   MOV [BX+DI-3],AX
+	   CMP [BX+DI-5],AX
+	   JNZ NO
+	   LOOP GO
+	   
+	   DEC COUNT
+	   JNZ GO1
+	   CALL DISPTIME
+	   MOV AH,4CH
+	   INT 21H
+CODE ENDS
+	 END START
