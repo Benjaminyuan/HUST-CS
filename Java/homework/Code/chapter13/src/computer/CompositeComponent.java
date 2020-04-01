@@ -14,7 +14,7 @@ public class CompositeComponent extends Component{
     }
     @Override
     public double calcPrice(){
-        return childs.stream().mapToDouble(c->c.getPrice()).sum();
+        return childs.stream().mapToDouble(c->c.calcPrice()).sum();
     }
     @Override
     public Iterator iterator(){
