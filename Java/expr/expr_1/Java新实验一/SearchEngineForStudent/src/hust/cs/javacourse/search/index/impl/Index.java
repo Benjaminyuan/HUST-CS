@@ -3,16 +3,26 @@ package hust.cs.javacourse.search.index.impl;
 import hust.cs.javacourse.search.index.AbstractDocument;
 import hust.cs.javacourse.search.index.AbstractIndex;
 import hust.cs.javacourse.search.index.AbstractPostingList;
+import hust.cs.javacourse.search.index.AbstractPosting;
 import hust.cs.javacourse.search.index.AbstractTerm;
+import hust.cs.javacourse.search.index.AbstractTermTuple;
+
 import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
  * AbstractIndex的具体实现类
  */
 public class Index extends AbstractIndex {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
     /**
      * 返回索引的字符串表示
      *
@@ -30,7 +40,20 @@ public class Index extends AbstractIndex {
      */
     @Override
     public void addDocument(AbstractDocument document) {
-
+        docIdToDocPathMapping.put(document.getDocId(),document.getDocPath());
+        List<AbstractTermTuple>  tuples = document.getTuples();
+        tuples.forEach( tuple->{
+            AbstractPostingList pl  = termToPostingListMapping.getOrDefault(tuple.term,new PostingList());
+            AbstractPosting p = pl.get(pl.indexOf(document.getDocId()));
+            if(p == null){
+                p = new Posting(document.getDocId(),0,new ArrayList<Integer>());
+            }
+            p.setFreq(p.getFreq()+1);
+            List<Integer> l = p.getPositions();
+            l.add(tuple.curPos);
+            p.setPositions(l);
+        });
+        
     }
 
     /**

@@ -17,8 +17,12 @@ import java.util.TreeMap;
  */
 public abstract class AbstractIndex implements FileSerializable{
     /**
-     * 内存中的docId和docPath的映射关系, key为docId，value为对应的docPath.
-     *      TreeMap可以对键值排序
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * 内存中的docId和docPath的映射关系, key为docId，value为对应的docPath. TreeMap可以对键值排序
      */
     protected Map<Integer, String> docIdToDocPathMapping = new TreeMap<>();
 

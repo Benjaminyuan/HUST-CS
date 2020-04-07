@@ -1,9 +1,7 @@
 package hust.cs.javacourse.search.index;
 
-import java.io.BufferedReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 
 /**
  * 定义文件序列化接口

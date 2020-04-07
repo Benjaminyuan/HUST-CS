@@ -11,6 +11,10 @@ package hust.cs.javacourse.search.index;
  */
 public abstract class AbstractTerm implements  Comparable<AbstractTerm>, FileSerializable{
     /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+    /**
      * Term内容
      */
     protected String content;

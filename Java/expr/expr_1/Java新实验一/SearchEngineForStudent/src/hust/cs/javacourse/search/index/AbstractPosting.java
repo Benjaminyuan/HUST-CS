@@ -19,6 +19,10 @@ import java.util.List;
  */
 public abstract class AbstractPosting implements Comparable<AbstractPosting>, FileSerializable {
     /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+    /**
      * 包含单词的文档id
      */
     protected int docId;

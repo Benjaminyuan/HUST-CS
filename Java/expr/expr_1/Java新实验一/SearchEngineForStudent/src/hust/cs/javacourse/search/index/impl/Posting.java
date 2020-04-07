@@ -2,15 +2,21 @@ package hust.cs.javacourse.search.index.impl;
 
 import hust.cs.javacourse.search.index.AbstractPosting;
 
-import javax.imageio.IIOException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class Posting extends AbstractPosting {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
+    public Posting(int docId, int freq, List<Integer> positions){
+        super(docId,freq,positions);
+    }
     @Override
     public boolean equals(Object obj) {
         if(obj instanceof AbstractPosting){

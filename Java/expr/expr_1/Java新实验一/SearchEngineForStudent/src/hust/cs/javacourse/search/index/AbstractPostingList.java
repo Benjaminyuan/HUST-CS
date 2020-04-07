@@ -13,6 +13,10 @@ import java.util.List;
  */
 public abstract class AbstractPostingList implements FileSerializable{
     /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+    /**
      * Posting列表，Posting必须是AbstractPosting子类型对象
      */
     protected List<AbstractPosting> list = new ArrayList<AbstractPosting>();

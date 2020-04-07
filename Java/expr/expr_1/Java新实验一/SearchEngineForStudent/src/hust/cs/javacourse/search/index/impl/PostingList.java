@@ -8,6 +8,11 @@ import java.io.ObjectOutputStream;
 import java.util.List;
 
 public class PostingList extends AbstractPostingList {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
     @Override
     public void add(AbstractPosting posting) {
         this.list.add(posting);
@@ -22,17 +27,20 @@ public class PostingList extends AbstractPostingList {
     }
     @Override
     public void add(List<AbstractPosting> postings) {
-
+        this.list.addAll(postings);
     }
 
     @Override
     public AbstractPosting get(int index) {
+        if(index < this.list.size() && index > 0){
+            return this.list.get(index);
+        }
         return null;
     }
 
     @Override
     public int indexOf(AbstractPosting posting) {
-        return 0;
+        return this.list.indexOf(posting);
     }
 
     @Override

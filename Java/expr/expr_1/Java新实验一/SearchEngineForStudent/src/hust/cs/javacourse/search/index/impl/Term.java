@@ -7,11 +7,25 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 public class Term extends AbstractTerm {
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+
     @Override
     public boolean equals(Object obj) {
-        return false;
+        if(obj instanceof AbstractTerm){
+            AbstractTerm t = (AbstractTerm) obj;
+            return t.getContent().equals(this.getContent());
+        }
+        return false ;
     }
 
+    @Override
+    public int hashCode() {
+        return this.getContent().hashCode();
+    }
+    
     @Override
     public String toString() {
         return this.content;

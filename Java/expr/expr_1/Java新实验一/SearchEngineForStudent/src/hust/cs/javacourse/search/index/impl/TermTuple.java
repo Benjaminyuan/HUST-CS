@@ -1,6 +1,5 @@
 package hust.cs.javacourse.search.index.impl;
 
-import hust.cs.javacourse.search.index.AbstractTerm;
 import hust.cs.javacourse.search.index.AbstractTermTuple;
 
 public class TermTuple extends AbstractTermTuple {
@@ -8,11 +7,14 @@ public class TermTuple extends AbstractTermTuple {
     public boolean equals(Object obj) {
         if(obj instanceof AbstractTermTuple){
             AbstractTermTuple t = (AbstractTermTuple) obj;
-            return t.curPos == this.curPos && t.term == this.term;
+            return t.curPos == this.curPos && t.term.equals(this.term);
         }
         return false;
     }
-
+    @Override
+    public int hashCode() {
+        return this.term.hashCode();
+    }
     @Override
     public String toString() {
         return "curPos: "+curPos+",term: "+term;
