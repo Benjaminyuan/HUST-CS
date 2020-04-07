@@ -1,0 +1,461 @@
+.386
+
+STACK SEGMENT USE16 STACK
+    DB 200 DUP(0)
+STACK ENDS
+DATA SEGMENT USE16 
+BUF  DB '*****THE SHOP IS SHOP_ONE*****$'
+BUF1 DB 'PLEASE INPUT YOUR NAME $'
+BUF2 DB 'PLEASE INPUT YOUR PASSWORD $'
+BUF3 DB 'The name is wrong $'
+BUF4 DB 'Please input the good you want $'
+BUF5 DB 'The NAME is right $'
+BUF6 DB 'The PWD is wrong$'
+BUF7 DB 'Landed successfully$'
+BUF8 DB 'Good you want not exist$'
+BUF9 DB 'Good is not remain$'
+BUF10 DB '0123456789abcdef'
+BUF11 DB 'The pwd is right $'
+BUF12 DB 'Good found!!!$'
+BUF13 DB 'count !!!$'
+
+BUF14 DB 'update success !!!$'
+
+
+AUTH DB ?
+CRLF DB 0DH,0AH,'$'
+IN_NAME DB 11
+	DB ?
+	DB 11 DUP(0)
+IN_PWD   DB 7
+	DB ?
+	DB 7 DUP(0)
+IN_GOOD DB 11
+	DB ?
+	DB 11 DUP(0)
+BNAME DB 'yjw',3 DUP(0)
+COUNT1 = $-BNAME
+BPASS DB 'test',0,0
+COUNT2 = $-BPASS
+N EQU 3000
+S1  DB 'SHOP_ONE',0
+GA1 DB 'PEN',7 DUP(0),10
+    DW 35,56,8500,25,?
+GA2 DB 'BOOK',6 DUP(0),9
+    DW 12,30,8500,5,?
+    ; 实际销售价格=销售价*折扣/10
+    ; 进货价(字类型)，
+    ; 销售价（字类型），
+    ; 进货总数（字类型），
+    ; 已售数量（字类型）
+    ; 推荐度
+GAN DB N-2 DUP('TEMP-VALUE',8,15,0,20,0,30,0,2,0,?,?)
+
+GOOD DW 0
+M EQU 100
+COUNTM DW 5000
+DATA ENDS
+CODE SEGMENT USE16
+    ASSUME CS:CODE,DS:DATA,SS:STACK
+
+START:
+    MOV AX,DATA
+    MOV DS,AX
+    LEA DI,GA1
+    MOV CX,10
+MENU:
+    ; 输出商店名称
+    LEA DX,BUF
+    MOV AH,9
+    INT 21H
+    ; 输出空格
+    LEA DX,CRLF
+    MOV AH,9
+    INT 21H
+    LEA DX,CRLF
+    MOV AH,9
+    INT 21H
+L_INPUT:
+    ;输入一个字符
+    MOV AH,1
+    INT 21H
+
+    LEA DX,CRLF
+    MOV AH,9
+    INT 21H
+
+    CMP AL,'1'
+    JE LOGIN
+    CMP AL,'2'
+    JE LIST_GOOD
+    CMP AL,'3'
+    JE ORDER
+    CMP AL,'4'
+    JE COUNT_PRODUCE
+    CMP AL,'5'
+    JE RANK
+    CMP AL,'6'
+    JE MODIFY_GOOD
+    CMP AL,'7'
+    JE CHANGE_STORE_RUNTIME
+    CMP AL,'8'
+    JE SHOW_CURRENT_CS
+    CMP AL,'9'
+    JE OVER
+    JMP MENU
+LOGIN:
+    ;请输入姓名
+    LEA DX,BUF1
+    MOV AH,9
+    INT 21H
+
+    LEA DX,IN_NAME
+    MOV AH,10
+    INT 21H
+
+    LEA DX,CRLF
+	MOV AH,9
+	INT 21H
+
+    ;判断是否仅输入回车，若是，直接跳到
+    CMP IN_NAME+1,0
+    JE MENU
+   ;长度不一致
+L_CHECK_NAME:
+    LEA SI,IN_NAME
+	LEA DI,BNAME
+	MOV CL,1[SI]
+	CMP CL,3
+	JNE LOGIN_NAME_WRONG
+L_LOOP_N: 
+    MOV AL,2[SI]
+	MOV BL,[DI]
+	INC SI
+	INC DI
+	CMP AL,BL
+	JNE LOGIN_NAME_WRONG
+	LOOP L_LOOP_N
+	LEA DX,BUF5
+	MOV AH,9
+	INT 21H
+	LEA DX,CRLF
+	MOV AH,9
+	INT 21H
+L_IN_PWD:
+    LEA DX,BUF2;输入密码
+	MOV AH,9
+	INT 21H
+
+	LEA DX,IN_PWD
+	MOV AH,10
+	INT 21H
+
+	LEA DX,CRLF
+	MOV AH,9
+	INT 21H
+
+
+    ;比较密码
+CHECK_PWd_LENGTH:
+    LEA SI,IN_PWD
+	LEA DI,BPASS
+	MOV CL,1[SI]
+	CMP CL,4
+	JNE LOGIN_PWD_WRONG
+L_CHECK_PWD:
+	MOV AL,2[SI]
+	MOV BL,[DI]
+	INC SI
+	INC DI
+	CMP AL,BL
+	JNE LOGIN_PWD_WRONG
+	LOOP L_CHECK_PWD
+
+    LEA DX,BUF11
+	MOV AH,9
+	INT 21H
+	LEA DX,CRLF
+	MOV AH,9
+	INT 21H
+	JMP L_AUTH_1
+L_AUTH_0:
+    ;auth设置为0
+    MOV AUTH,0
+    JMP MENU
+
+L_AUTH_1:
+    ;auth设置为1
+    MOV AUTH,1
+    JMP MENU
+    
+LOGIN_NAME_WRONG:
+    LEA DX,BUF3;提示输出错误的信息
+	MOV AH,9
+	INT 21H
+	LEA DX,CRLF
+	MOV AH,9
+	INT 21H
+	JMP LOGIN
+LOGIN_PWD_WRONG:
+	LEA DX,BUF6
+	MOV AH,9
+	INT 21H
+	LEA DX,CRLF
+	MOV AH,9
+	INT 21H
+	JMP L_IN_PWD
+LIST_GOOD:
+    ;;提示输入商品名称
+    LEA DX,BUF4
+	MOV AH,9
+	INT 21H
+    ; 输入商品的名字
+    LEA DX,IN_GOOD
+	MOV AH,10
+	INT 21H
+	
+    ;比较长度
+	CMP IN_GOOD+1,0
+    JNE L_CHECK_GOOD
+
+    JMP GOOD_NOT_FOUND
+
+
+L_CHECK_GOOD:	
+	LEA DX,CRLF
+	MOV AH,9
+	INT 21H
+	
+	MOV DX,0
+	MOV AH,0
+
+LL:
+    LEA DI,GA1
+    MOV AX,DX
+    IMUL AX,21
+    ADD DI,AX
+    LEA SI,IN_GOOD
+	MOV CL,1[SI]
+
+L_LOOP_G: 
+	MOV AL,2[SI]
+	MOV BL,[DI]
+	INC SI
+	INC DI
+	CMP AL,BL
+	JNE L_NEXT_GOOD
+	DEC CL
+	CMP CL,0
+	JE  MARK_GOOD
+	JMP L_LOOP_G
+
+L_NEXT_GOOD:;进入下个商品的位置
+	INC DX
+	CMP DX,30
+	JE GOOD_NOT_FOUND
+	JMP LL
+
+; 检查是否登陆，如果登陆
+
+CHECK_AGAIN:
+    ;CMP BYTE PTR [DI],0;待验证
+    ;JE MARK_GOOD
+    ;RET
+MARK_GOOD:
+    LEA DI,GA1
+    IMUL DX,21
+    ADD DI,DX
+    MOV GOOD,DI
+GOOD_FOUND:
+    LEA DX,BUF12
+    MOV AH,9
+    INT 21H
+    ; 空格
+    LEA DX,CRLF
+	MOV AH,9
+	INT 21H
+    JMP MENU
+GOOD_NOT_FOUND:
+    ;提示未找到信息
+    LEA DX,BUF8
+    MOV AH,9
+    INT 21H
+    ; 空格
+    LEA DX,CRLF
+	MOV AH,9
+	INT 21H
+    JMP MENU
+
+ORDER:
+    CMP GOOD,0
+    JE MENU
+    MOV AX,0
+    CALL TIMER
+
+LOOP_M:
+    MOV DI,GOOD
+
+    ;进货数量
+    MOV AX,WORD PTR [DI]+15
+
+    ;销量
+    MOV BX,WORD PTR [DI]+17
+
+    CMP AX,BX;比较
+    JE GOOD_NO_REMAIN ;进货数量等于已售数量，显示已经售完
+    MOV AX, WORD PTR [DI]+17
+    ADD AX,1
+    MOV WORD PTR [DI]+17,AX
+
+COUNT_PRODUCE:
+    MOV EBP,N;
+    XOR EDI,EDI
+    LEA DI,GA1
+; 计算推荐度
+COUNT_LOOP:
+
+	MOV AX, WORD PTR [EDI]+11
+	MOV CX, 10
+	IMUL CX
+
+	MOV SI, WORD PTR [EDI]+13
+	MOVZX BX, BYTE PTR[EDI]+10
+	IMUL SI, BX
+	DIV SI ;AX中为商，DX中为余数
+	MOVZX ESI,AX ;将商移动到SI中储存
+	 ;以上部分为推荐度的左半部分
+
+
+    MOVZX EAX,WORD PTR [EDI]+17;已售数量
+    ;位移
+    MOV ECX,64
+    IMUL ECX
+    ;SHL EAX,6;位移
+	XOR EDX,EDX
+    MOVZX EBX,WORD PTR [EDI]+15;进货量
+    DIV EBX;
+	ADD ESI,EAX;SI即为推荐度
+	MOV 19[DI],SI;将推荐度储存
+
+	ADD DI,21;将DI指向下一商品信息段
+	DEC EBP;查看下一商品段信息，BP加一
+    CMP EBP,0;
+	JNE COUNT_LOOP
+
+    DEC COUNTM
+    CMP COUNTM,0
+    JNE LOOP_M
+
+    MOV AX,1        ;计时
+    CALL TIMER
+
+    ;LEA DX,BUF13 ;调试
+    ;MOV AH,9
+    ;INT 21H
+    ; 空格
+    ;LEA DX,CRLF
+	;MOV AH,9
+	;INT 21H
+    MOV GOOD,0;
+    JMP MENU
+GOOD_NO_REMAIN:
+    LEA DX,BUF9 
+    MOV AH,9
+    INT 21H
+    ; 空格
+    LEA DX,CRLF
+	MOV AH,9
+	INT 21H
+    JMP MENU
+RANK:
+    JMP MENU
+MODIFY_GOOD:
+    JMP MENU
+CHANGE_STORE_RUNTIME:
+    JMP MENU
+SHOW_CURRENT_CS:
+    MOV AX,CS
+    MOV BX,16
+L_LOOP_SHOW_CS:
+    MOV DX,0
+    DIV BX;商在AX,余数在DX中
+    PUSH DX
+    CMP AX,0
+    JE SHOW_CS
+    JMP L_LOOP_SHOW_CS
+SHOW_CS:
+    MOV CX,0
+LOOP_SHOW:
+    CMP CX,4
+    JE SHOW_END
+    POP SI
+    MOVZX DX,BUF10[SI]
+    MOV AH,2
+    INT 21H
+    INC CX
+    JMP LOOP_SHOW
+SHOW_END:
+    LEA DX,CRLF
+    MOV AH,9
+    INT 21H
+    
+    JMP MENU
+OVER: 
+	MOV   AH,4CH
+	MOV   AL, 0;退出码 (如0、0FFH等)
+    INT   21H
+
+TIMER	PROC
+	PUSH  DX
+	PUSH  CX
+	PUSH  BX
+	MOV   BX, AX
+	MOV   AH, 2CH
+	INT   21H	     ;CH=hour(0-23),CL=minute(0-59),DH=second(0-59),DL=centisecond(0-100)
+	MOV   AL, DH
+	MOV   AH, 0
+	IMUL  AX,AX,1000
+	MOV   DH, 0
+	IMUL  DX,DX,10
+	ADD   AX, DX
+	CMP   BX, 0
+	JNZ   _T1
+	MOV   CS:_TS, AX
+_T0:	POP   BX
+	POP   CX
+	POP   DX
+	RET
+_T1:	SUB   AX, CS:_TS
+	JNC   _T2
+	ADD   AX, 60000
+_T2:	MOV   CX, 0
+	MOV   BX, 10
+_T3:	MOV   DX, 0
+	DIV   BX
+	PUSH  DX
+	INC   CX
+	CMP   AX, 0
+	JNZ   _T3
+	MOV   BX, 0
+_T4:	POP   AX
+	ADD   AL, '0'
+	MOV   CS:_TMSG[BX], AL
+	INC   BX
+	LOOP  _T4
+	PUSH  DS
+	MOV   CS:_TMSG[BX+0], 0AH
+	MOV   CS:_TMSG[BX+1], 0DH
+	MOV   CS:_TMSG[BX+2], '$'
+	LEA   DX, _TS+2
+	PUSH  CS
+	POP   DS
+	MOV   AH, 9
+	INT   21H
+	POP   DS
+	JMP   _T0
+_TS	DW    ?
+ 	DB    'Time elapsed in ms is '
+_TMSG	DB    12 DUP(0)
+TIMER   ENDP
+CODE ENDS 
+	END START

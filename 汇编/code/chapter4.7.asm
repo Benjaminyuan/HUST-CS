@@ -1,0 +1,72 @@
+
+STACK SEGMENT USE16 STACK
+DB 200 DUP(0)
+STACK ENDS
+DATA SEGMENT USE16
+    INPUT DB "INPUT: $"
+    OUTPUT DB "OUTPUT: $"
+    BUF DB "123456789abcdef"
+    BUF2 DB 11 
+         DB ?
+         DB 11 DUP(0)
+    CRLF DB 0DH,0AH,'$'
+DATA ENDS
+CODE SEGEMENT USE16
+ASSUME CS:CODE,DS:DATA,SS:STACK
+NF10T16 PROC
+
+L_INPUT:
+    LEA DX,INPUT
+    MOV AH 9
+    INT 21H
+
+    CMP AL,0
+    JE RETURN
+
+    LEA DX,BUF2;输入字符串
+    MOV AH,10
+    INT 21H
+
+    CMP IN_GOOD+1,0;比较长度
+    JE L_INPUT;
+    ;字符串转化为数字
+    MOV CX,IN_GOOD+1;
+    LEA SI,IN_GOOD;
+    ADD SI,2
+    MOV AX,0;
+LOOP_S2I:
+    ;字符转化为整数
+    MOV DX,[SI]
+    SUB DX,'0';
+    MOV DI,CX-1;
+    IMUL DI,10
+    IMUL DX,DI
+    ADD AX,DX
+    LOOP LOOP_S2I
+    MOV BX,16;
+LOOP_SHOW:
+    ;整数转化为16进制
+    MOV DX,0
+    DIV BX;
+    PUSH DX;
+    INC CX;
+    CMP AX,0;
+    JNE LOOP_SHOW;
+
+    LEA DX,CRLF
+    MOV AH,9
+    INT 21H
+
+    LEA DX,INPUT
+    MOV AH 9
+    INT 21H
+LOOPA:
+    ;输出
+    POP SI;
+    MOVZX DX,BUF[SI];
+    MOV AH,2
+    INT 21H
+    LOOP LOOPA
+RETURN:   RET
+
+NF10T16 ENDP

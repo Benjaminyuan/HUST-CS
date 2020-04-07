@@ -37,21 +37,23 @@ BNAME DB 'yjw',3 DUP(0)
 COUNT1 = $-BNAME
 BPASS DB 'test',0,0
 COUNT2 = $-BPASS
-N EQU 30
+N EQU 3000
 S1  DB 'SHOP_ONE',0
 GA1 DB 'PEN',7 DUP(0),10
-    DW 35,56,70,25,?
+    DW 35,56,8500,25,?
 GA2 DB 'BOOK',6 DUP(0),9
-    DW 12,30,25,5,?
-    ;实际销售价格=销售价*折扣/10
+    DW 12,30,8500,5,?
+    ; 实际销售价格=销售价*折扣/10
     ; 进货价(字类型)，
     ; 销售价（字类型），
     ; 进货总数（字类型），
-    ;已售数量（字类型）
+    ; 已售数量（字类型）
     ; 推荐度
 GAN DB N-2 DUP('TEMP-VALUE',8,15,0,20,0,30,0,2,0,?,?)
-	
+
 GOOD DW 0
+M EQU 100
+COUNTM DW 5000
 DATA ENDS
 CODE SEGMENT USE16
     ASSUME CS:CODE,DS:DATA,SS:STACK
@@ -118,7 +120,7 @@ LOGIN:
     ;判断是否仅输入回车，若是，直接跳到
     CMP IN_NAME+1,0
     JE MENU
-;长度不一致
+   ;长度不一致
 L_CHECK_NAME:
     LEA SI,IN_NAME
 	LEA DI,BNAME
@@ -283,72 +285,71 @@ GOOD_NOT_FOUND:
 ORDER:
     CMP GOOD,0
     JE MENU
+    MOV AX,0
+    CALL TIMER
+
+LOOP_M:
     MOV DI,GOOD
-    ;进货数量-1
+
+    ;进货数量
     MOV AX,WORD PTR [DI]+15
-    ; 等于0则跳转
-    CMP AX,0
-    JE  GOOD_NO_REMAIN
-    SUB AX,1
-    MOV WORD PTR [DI]+15,AX
-    ;销量+1
-    MOV AX,WORD PTR [DI]+17
+
+    ;销量
+    MOV BX,WORD PTR [DI]+17
+
+    CMP AX,BX;比较
+    JE GOOD_NO_REMAIN ;进货数量等于已售数量，显示已经售完
+    MOV AX, WORD PTR [DI]+17
     ADD AX,1
     MOV WORD PTR [DI]+17,AX
-    JMP COUNT_PRODUCE
 
-GOOD_NO_REMAIN:
-    LEA DX,BUF9 ;提示未找到信息
-    MOV AH,9
-    INT 21H
-    ; 空格
-    LEA DX,CRLF
-	MOV AH,9
-	INT 21H
-    JMP MENU
 COUNT_PRODUCE:
-    MOV DX,0
+    MOV BP,N;
+    LEA DI,GA1
 ; 计算推荐度
 COUNT_LOOP:
-    PUSH DX
-    LEA DI,GA1
-    MOV AX,DX
-    IMUL AX,21
-    ADD DI,AX
-    
-    LEA DX,BUF13 ;提示未找到信息
-    MOV AH,9
-    INT 21H
-    ; 空格
-    LEA DX,CRLF
-	MOV AH,9
-	INT 21H
 
-
-    ; 计算推荐度
-    MOV AX, WORD PTR [DI]+11
-	MOV CX, 128
+	MOV AX, WORD PTR [DI]+11
+	MOV CX, 10
 	IMUL CX
 	MOV SI, WORD PTR [DI]+13
 	
 	MOV BX,0
 	MOV BL, BYTE PTR[DI]+10
 	IMUL SI, BX
-	DIV SI
-	MOV SI, AX
+	DIV SI ;AX中为商，DX中为余数
+	MOV SI,AX ;将商移动到SI中储存
+	 ;以上部分为推荐度的左半部分
+
 	MOV AX, WORD PTR [DI]+17
 	MOV CX, 64
 	IMUL CX
-	DIV WORD PTR [DI]+15
-	ADD SI,AX
+	DIV WORD PTR [DI]+15;商储存在AX中
+	ADD SI,AX;SI即为推荐度
+	MOV 19[DI],SI;将推荐度储存
+	ADD DI,21;将DI指向下一商品信息段
+	DEC BP;查看下一商品段信息，BP加一
+    CMP BP,0;
+	JNE COUNT_LOOP
 
-    MOV WORD PTR [DI]+19,SI
-    POP DX
-    INC DX
-	CMP DX,30
-    JNE COUNT_LOOP
+    DEC COUNTM
+    CMP COUNTM,0
+    JNE LOOP_M
 
-    LEA DX,BUF14 
+    MOV AX,1        ;计时
+    CALL TIMER
+
+    ;LEA DX,BUF13 ;调试
+    ;MOV AH,9
+    ;INT 21H
+    ; 空格
+    ;LEA DX,CRLF
+	;MOV AH,9
+	;INT 21H
+    MOV GOOD,0;
+    JMP MENU
+GOOD_NO_REMAIN:
+    LEA DX,BUF9 
     MOV AH,9
     INT 21H
     ; 空格
@@ -393,5 +394,58 @@ OVER:
 	MOV   AH,4CH
 	MOV   AL, 0;退出码 (如0、0FFH等)
     INT   21H
+
+TIMER	PROC
+	PUSH  DX
+	PUSH  CX
+	PUSH  BX
+	MOV   BX, AX
+	MOV   AH, 2CH
+	INT   21H	     ;CH=hour(0-23),CL=minute(0-59),DH=second(0-59),DL=centisecond(0-100)
+	MOV   AL, DH
+	MOV   AH, 0
+	IMUL  AX,AX,1000
+	MOV   DH, 0
+	IMUL  DX,DX,10
+	ADD   AX, DX
+	CMP   BX, 0
+	JNZ   _T1
+	MOV   CS:_TS, AX
+_T0:	POP   BX
+	POP   CX
+	POP   DX
+	RET
+_T1:	SUB   AX, CS:_TS
+	JNC   _T2
+	ADD   AX, 60000
+_T2:	MOV   CX, 0
+	MOV   BX, 10
+_T3:	MOV   DX, 0
+	DIV   BX
+	PUSH  DX
+	INC   CX
+	CMP   AX, 0
+	JNZ   _T3
+	MOV   BX, 0
+_T4:	POP   AX
+	ADD   AL, '0'
+	MOV   CS:_TMSG[BX], AL
+	INC   BX
+	LOOP  _T4
+	PUSH  DS
+	MOV   CS:_TMSG[BX+0], 0AH
+	MOV   CS:_TMSG[BX+1], 0DH
+	MOV   CS:_TMSG[BX+2], '$'
+	LEA   DX, _TS+2
+	PUSH  CS
+	POP   DS
+	MOV   AH, 9
+	INT   21H
+	POP   DS
+	JMP   _T0
+_TS	DW    ?
+ 	DB    'Time elapsed in ms is '
+_TMSG	DB    12 DUP(0)
+TIMER   ENDP
 CODE ENDS 
 	END START
