@@ -7,9 +7,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 public class Term extends AbstractTerm {
-    /**
-     *
-     */
+
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -28,7 +26,7 @@ public class Term extends AbstractTerm {
     
     @Override
     public String toString() {
-        return this.content;
+        return "term: "+this.content;
     }
 
     @Override

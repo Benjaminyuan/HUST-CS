@@ -8,6 +8,8 @@ import hust.cs.javacourse.search.index.AbstractTerm;
 import hust.cs.javacourse.search.index.AbstractTermTuple;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -30,7 +32,15 @@ public class Index extends AbstractIndex {
      */
     @Override
     public String toString() {
-        return null;
+        StringBuilder sb = new StringBuilder("Index:\nTermMap:\n");
+        termToPostingListMapping.forEach((k,v)->{
+            sb.append(String.format("%s,%s\n",k.toString(),v.toString()));
+        });
+        sb.append("docMap:\n");
+        docIdToDocPathMapping.forEach((k,v)->{
+            sb.append(String.format("docId: %d,docPath: %s\n",k,v));
+        });
+        return sb.toString();
     }
 
     /**
@@ -42,18 +52,21 @@ public class Index extends AbstractIndex {
     public void addDocument(AbstractDocument document) {
         docIdToDocPathMapping.put(document.getDocId(),document.getDocPath());
         List<AbstractTermTuple>  tuples = document.getTuples();
-        tuples.forEach( tuple->{
+        for(int i=0;i<tuples.size();i++){
+            AbstractTermTuple tuple =  tuples.get(i);
             AbstractPostingList pl  = termToPostingListMapping.getOrDefault(tuple.term,new PostingList());
             AbstractPosting p = pl.get(pl.indexOf(document.getDocId()));
             if(p == null){
                 p = new Posting(document.getDocId(),0,new ArrayList<Integer>());
             }
+            // 设置position
             p.setFreq(p.getFreq()+1);
             List<Integer> l = p.getPositions();
             l.add(tuple.curPos);
             p.setPositions(l);
-        });
-        
+            pl.add(p);
+            termToPostingListMapping.put(tuple.term,pl);
+        }
     }
 
     /**
@@ -64,7 +77,12 @@ public class Index extends AbstractIndex {
      */
     @Override
     public void load(File file) {
-
+        try{
+            ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
+            readObject(in);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -75,7 +93,12 @@ public class Index extends AbstractIndex {
      */
     @Override
     public void save(File file) {
-
+        try{
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file));
+            writeObject(out);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -86,7 +109,7 @@ public class Index extends AbstractIndex {
      */
     @Override
     public AbstractPostingList search(AbstractTerm term) {
-        return null;
+        return termToPostingListMapping.getOrDefault(term,null);
     }
 
     /**
@@ -96,7 +119,7 @@ public class Index extends AbstractIndex {
      */
     @Override
     public Set<AbstractTerm> getDictionary() {
-        return null;
+        return termToPostingListMapping.keySet();
     }
 
     /**
@@ -109,7 +132,11 @@ public class Index extends AbstractIndex {
      */
     @Override
     public void optimize() {
-
+        Set<AbstractTerm> s = getDictionary();
+        for(AbstractTerm term : s){
+            AbstractPostingList  pl = termToPostingListMapping.get(term);
+            pl.sort();
+        }
     }
 
     /**
@@ -120,7 +147,7 @@ public class Index extends AbstractIndex {
      */
     @Override
     public String getDocName(int docId) {
-        return null;
+        return docIdToDocPathMapping.getOrDefault(docId, null);
     }
 
     /**
@@ -130,9 +157,16 @@ public class Index extends AbstractIndex {
      */
     @Override
     public void writeObject(ObjectOutputStream out) {
-
+        try{
+            Set<AbstractTerm> terms = getDictionary();
+            out.writeObject(terms.size());
+            for(AbstractTerm term : terms){
+                term.writeObject(out);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
-
     /**
      * 从二进制文件读
      *
@@ -140,6 +174,18 @@ public class Index extends AbstractIndex {
      */
     @Override
     public void readObject(ObjectInputStream in) {
-
+        try{
+            termToPostingListMapping.clear();
+            int size =(int) in.readObject();
+            for(int i=0;i<size ;i++){
+                AbstractTerm t = new Term();
+                t.readObject(in);
+                AbstractPostingList pl = new PostingList();
+                pl.readObject(in);
+                termToPostingListMapping.put(t,pl);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 }

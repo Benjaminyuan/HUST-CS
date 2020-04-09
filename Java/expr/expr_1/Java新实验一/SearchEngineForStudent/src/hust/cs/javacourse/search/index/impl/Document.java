@@ -59,8 +59,8 @@ public class Document extends AbstractDocument {
 
     @Override
     public String toString() {
-        StringBuilder s = new StringBuilder("docID: "+docId+" docPath: "+docPath+" tuples:[ ");
-        tuples.forEach(e->{s.append(e.toString()).append(", ");});
+        StringBuilder s = new StringBuilder("docID: "+docId+" docPath: "+docPath+" tuples:[\n");
+        tuples.forEach(e->{s.append(e.toString()).append("\n");});
         s.append("]");
         return s.toString();
     }

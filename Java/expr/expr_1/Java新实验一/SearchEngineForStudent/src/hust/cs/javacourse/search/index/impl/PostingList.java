@@ -5,12 +5,11 @@ import hust.cs.javacourse.search.index.AbstractPostingList;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Collections;
 import java.util.List;
 
 public class PostingList extends AbstractPostingList {
-    /**
-     *
-     */
+
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -20,8 +19,9 @@ public class PostingList extends AbstractPostingList {
 
     @Override
     public String toString() {
-        StringBuilder s = new StringBuilder("PostingList:[ ");
-        list.forEach(e->{s.append(e.toString()).append(", ");});
+        StringBuilder s = new StringBuilder("PostingList:[");
+        list.forEach(e->{s.append(" "+e.toString()).append(",");});
+        s.deleteCharAt(s.length()-1);
         s.append("]");
         return s.toString();
     }
@@ -32,7 +32,7 @@ public class PostingList extends AbstractPostingList {
 
     @Override
     public AbstractPosting get(int index) {
-        if(index < this.list.size() && index > 0){
+        if(index < this.list.size() && index >= 0){
             return this.list.get(index);
         }
         return null;
@@ -45,51 +45,79 @@ public class PostingList extends AbstractPostingList {
 
     @Override
     public int indexOf(int docId) {
-        return 0;
+        int index = -1;
+        for(int i=0;i<list.size();i++){
+            AbstractPosting p = list.get(i);
+            if(p.getDocId() == docId){
+                index = i;
+                break;
+            }
+        }
+        return index;
     }
 
     @Override
     public boolean contains(AbstractPosting posting) {
-        return false;
+        return list.contains(posting);
     }
 
     @Override
     public void remove(int index) {
-
+        list.remove(index);
     }
 
     @Override
     public void remove(AbstractPosting posting) {
-
+        list.remove(posting);
     }
 
     @Override
     public int size() {
-        return 0;
+        return list.size();
     }
 
     @Override
     public void clear() {
-
+        list.clear();
     }
 
     @Override
     public boolean isEmpty() {
-        return false;
+        return list.isEmpty();
     }
 
     @Override
     public void sort() {
-
+        list.sort((o1,o2)-> o1.compareTo(o2));
+        list.forEach(e->{
+            e.sort();
+        });
     }
 
     @Override
     public void writeObject(ObjectOutputStream out) {
-
+        try{
+            out.writeObject(list.size());
+            for(AbstractPosting p : list ){
+                p.writeObject(out);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void readObject(ObjectInputStream in) {
-
+        try{
+            int size = ( int )in.readObject();
+            list.clear();
+            for(int i=0;i<size;i++){
+                AbstractPosting p = new Posting();
+                p.readObject(in);
+                list.add(p);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 }

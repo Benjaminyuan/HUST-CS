@@ -27,13 +27,15 @@ public class DocumentBuilder extends AbstractDocumentBuilder {
     }
     @Override
     public AbstractDocument build(int docId, String docPath, File file) {
+        AbstractDocument d = null ;
         try{
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+
             AbstractTermTupleStream stream = new TermTupleFilter(new TermTupleScanner(bufferedReader));
-            build(docId,docPath,stream);
+            d = build(docId,docPath,stream);
         }catch(Exception e){
             e.printStackTrace();
         }
-        return null;
+        return d;
     }
 }

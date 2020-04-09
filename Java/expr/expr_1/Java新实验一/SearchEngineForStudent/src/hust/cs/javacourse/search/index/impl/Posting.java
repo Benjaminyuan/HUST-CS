@@ -5,7 +5,6 @@ import hust.cs.javacourse.search.index.AbstractPosting;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Posting extends AbstractPosting {
@@ -13,6 +12,8 @@ public class Posting extends AbstractPosting {
      *
      */
     private static final long serialVersionUID = 1L;
+    public Posting(){
+    }
 
     public Posting(int docId, int freq, List<Integer> positions){
         super(docId,freq,positions);
@@ -29,7 +30,8 @@ public class Posting extends AbstractPosting {
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder("docID: "+ docId+" freq: "+freq+" position: [");
-        positions.forEach(pos -> s.append(pos).append(", "));
+        positions.forEach(pos -> s.append(" "+pos).append(","));
+        s.deleteCharAt(s.length()-1);
         s.append("]");
         return s.toString();
     }
@@ -56,12 +58,13 @@ public class Posting extends AbstractPosting {
 
     @Override
     public List<Integer> getPositions() {
-        return new ArrayList<>(positions);
+        //这里考虑到拷贝的性能问题
+        return positions;
     }
 
     @Override
     public void setPositions(List<Integer> positions) {
-        this.positions = new ArrayList<>(positions);
+        this.positions = positions;
     }
 
     @Override
@@ -77,11 +80,11 @@ public class Posting extends AbstractPosting {
     @Override
     public void writeObject(ObjectOutputStream out) {
         try{
-            out.writeInt(docId);
-            out.writeInt(freq);
-            out.writeInt(positions.size());
+            out.writeObject(docId);
+            out.writeObject(freq);
+            out.writeObject(positions.size());
             for (int i:positions){
-                out.writeInt(i);
+                out.writeObject(i);
             }
         }catch (IOException e) {
             e.printStackTrace();
@@ -91,12 +94,12 @@ public class Posting extends AbstractPosting {
     @Override
     public void readObject(ObjectInputStream in) {
         try {
-            docId = in.readInt();
-            freq = in.readInt();
-            int size = in.readInt();
+            docId = (int) in.readObject();
+            freq = (int) in.readObject();
+            int size = (int) in.readObject();
             positions.clear();
             for (int i = 0; i < size ; i++) {
-                positions.add(in.readInt());
+                positions.add( (int) in.readObject());
             }
         }catch (Exception e){
             e.printStackTrace();

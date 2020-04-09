@@ -9,6 +9,12 @@ import hust.cs.javacourse.search.query.AbstractHit;
 
 public class Hit extends AbstractHit {
 
+    public  Hit(int docId, String docPath) {
+        super(docId,docPath);
+    }
+    public Hit(int docId, String docPath, Map<AbstractTerm, AbstractPosting> termPostingMapping){
+        super(docId,docPath,termPostingMapping);
+    }
     @Override
     public int getDocId() {
         return docId;
@@ -41,7 +47,8 @@ public class Hit extends AbstractHit {
 
     @Override
     public Map<AbstractTerm, AbstractPosting> getTermPostingMapping() {
-        return new HashMap<>(this.termPostingMapping);
+        // return new HashMap<>(this.termPostingMapping);
+        return this.termPostingMapping;
     }
 
     @Override

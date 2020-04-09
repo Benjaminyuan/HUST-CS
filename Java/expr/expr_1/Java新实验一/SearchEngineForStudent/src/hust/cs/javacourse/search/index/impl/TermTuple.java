@@ -17,6 +17,6 @@ public class TermTuple extends AbstractTermTuple {
     }
     @Override
     public String toString() {
-        return "curPos: "+curPos+",term: "+term;
+        return String.format("curPos: %d, freq: %d, %s",curPos,freq,term);
     }
 }
