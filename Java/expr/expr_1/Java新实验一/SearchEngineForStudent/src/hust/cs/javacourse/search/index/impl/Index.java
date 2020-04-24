@@ -52,8 +52,8 @@ public class Index extends AbstractIndex {
     public void addDocument(AbstractDocument document) {
         docIdToDocPathMapping.put(document.getDocId(),document.getDocPath());
         List<AbstractTermTuple>  tuples = document.getTuples();
-        for(int i=0;i<tuples.size();i++){
-            AbstractTermTuple tuple =  tuples.get(i);
+        tuples.forEach(tuple ->{
+            
             AbstractPostingList pl  = termToPostingListMapping.getOrDefault(tuple.term,new PostingList());
             AbstractPosting p = pl.get(pl.indexOf(document.getDocId()));
             if(p == null){
@@ -66,7 +66,7 @@ public class Index extends AbstractIndex {
             p.setPositions(l);
             pl.add(p);
             termToPostingListMapping.put(tuple.term,pl);
-        }
+        });
     }
 
     /**
