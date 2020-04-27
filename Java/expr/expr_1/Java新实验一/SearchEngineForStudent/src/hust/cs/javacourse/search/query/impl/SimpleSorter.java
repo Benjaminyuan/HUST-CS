@@ -6,7 +6,7 @@ import java.util.Set;
 import hust.cs.javacourse.search.query.AbstractHit;
 import hust.cs.javacourse.search.query.Sort;
 import hust.cs.javacourse.search.index.AbstractTerm;
-public class SortImp implements Sort {
+public class SimpleSorter implements Sort {
 
     @Override
     public void sort(List<AbstractHit> hits) {

@@ -14,20 +14,25 @@ public class PostingList extends AbstractPostingList {
 
     @Override
     public void add(AbstractPosting posting) {
-        this.list.add(posting);
+        if(!this.list.contains(posting)){
+            this.list.add(posting);
+        }
     }
 
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder("PostingList:[");
-        list.forEach(e->{s.append(" "+e.toString()).append(",");});
+        list.forEach(e->{
+            s.append(" ").append(e.toString()).append(",");});
         s.deleteCharAt(s.length()-1);
         s.append("]");
         return s.toString();
     }
     @Override
     public void add(List<AbstractPosting> postings) {
-        this.list.addAll(postings);
+        for(AbstractPosting p : postings){
+            add(p);
+        }
     }
 
     @Override
@@ -88,10 +93,8 @@ public class PostingList extends AbstractPostingList {
 
     @Override
     public void sort() {
-        list.sort((o1,o2)-> o1.compareTo(o2));
-        list.forEach(e->{
-            e.sort();
-        });
+        list.sort(AbstractPosting::compareTo);
+        list.forEach(AbstractPosting::sort);
     }
 
     @Override

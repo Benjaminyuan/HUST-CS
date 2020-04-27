@@ -7,7 +7,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Document extends AbstractDocument {
-    @Override
+    public Document(){}
+    public Document(int docId,String path){
+        super(docId,path);
+    }
+    public Document(int docId, String docPath,List<AbstractTermTuple> tuples){
+        super(docId,docPath,tuples);
+    }
+
+        @Override
     public int getDocId() {
         return docId;
     }

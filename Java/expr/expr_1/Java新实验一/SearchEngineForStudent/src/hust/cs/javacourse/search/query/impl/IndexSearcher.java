@@ -25,6 +25,9 @@ public class IndexSearcher extends AbstractIndexSearcher {
     @Override
     public AbstractHit[] search(AbstractTerm queryTerm, Sort sorter) {
         AbstractPostingList pl = index.search(queryTerm);
+        if(pl == null){
+            return null;
+        }
         AbstractHit[] res = new Hit[pl.size()];
         for (int i = 0; i < pl.size(); i++) {
             AbstractPosting p = pl.get(i);

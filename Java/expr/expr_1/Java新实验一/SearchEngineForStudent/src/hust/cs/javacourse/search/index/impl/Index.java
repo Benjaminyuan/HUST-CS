@@ -7,11 +7,7 @@ import hust.cs.javacourse.search.index.AbstractPosting;
 import hust.cs.javacourse.search.index.AbstractTerm;
 import hust.cs.javacourse.search.index.AbstractTermTuple;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -50,21 +46,27 @@ public class Index extends AbstractIndex {
      */
     @Override
     public void addDocument(AbstractDocument document) {
+        if(document == null){
+            return;
+        }
         docIdToDocPathMapping.put(document.getDocId(),document.getDocPath());
         List<AbstractTermTuple>  tuples = document.getTuples();
         tuples.forEach(tuple ->{
-            
+            boolean shouldAdd = false;
             AbstractPostingList pl  = termToPostingListMapping.getOrDefault(tuple.term,new PostingList());
             AbstractPosting p = pl.get(pl.indexOf(document.getDocId()));
             if(p == null){
                 p = new Posting(document.getDocId(),0,new ArrayList<Integer>());
+                shouldAdd = true;
             }
             // 设置position
             p.setFreq(p.getFreq()+1);
             List<Integer> l = p.getPositions();
             l.add(tuple.curPos);
             p.setPositions(l);
-            pl.add(p);
+            if(shouldAdd){
+                pl.add(p);
+            }
             termToPostingListMapping.put(tuple.term,pl);
         });
     }
@@ -77,6 +79,9 @@ public class Index extends AbstractIndex {
      */
     @Override
     public void load(File file) {
+        if(file ==  null || !file.exists()){
+            return ;
+        }
         try{
             ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
             readObject(in);
@@ -93,6 +98,9 @@ public class Index extends AbstractIndex {
      */
     @Override
     public void save(File file) {
+        if(file == null || !file.exists()){
+            return;
+        }
         try{
             ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file));
             writeObject(out);
@@ -109,6 +117,9 @@ public class Index extends AbstractIndex {
      */
     @Override
     public AbstractPostingList search(AbstractTerm term) {
+        if(term == null){
+            return null;
+        }
         return termToPostingListMapping.getOrDefault(term,null);
     }
 
@@ -133,6 +144,9 @@ public class Index extends AbstractIndex {
     @Override
     public void optimize() {
         Set<AbstractTerm> s = getDictionary();
+        if(s == null|| s.size() == 0){
+            return;
+        }
         for(AbstractTerm term : s){
             AbstractPostingList  pl = termToPostingListMapping.get(term);
             pl.sort();
@@ -157,12 +171,25 @@ public class Index extends AbstractIndex {
      */
     @Override
     public void writeObject(ObjectOutputStream out) {
+        if(out == null){
+            return;
+        }
         try{
             Set<AbstractTerm> terms = getDictionary();
             out.writeObject(terms.size());
             for(AbstractTerm term : terms){
                 term.writeObject(out);
+                termToPostingListMapping.get(term).writeObject(out);
             }
+            out.writeObject(docIdToDocPathMapping.size());
+            docIdToDocPathMapping.forEach((k,v)->{
+                try {
+                    out.writeObject(k);
+                    out.writeObject(v);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -174,6 +201,9 @@ public class Index extends AbstractIndex {
      */
     @Override
     public void readObject(ObjectInputStream in) {
+        if(in == null){
+            return;
+        }
         try{
             termToPostingListMapping.clear();
             int size =(int) in.readObject();
@@ -183,6 +213,13 @@ public class Index extends AbstractIndex {
                 AbstractPostingList pl = new PostingList();
                 pl.readObject(in);
                 termToPostingListMapping.put(t,pl);
+            }
+            docIdToDocPathMapping.clear();
+            size = (int) in.readObject();
+            for(int i=0;i<size;i++){
+                Integer docId = (Integer) in.readObject();
+                String docPath = (String) in.readObject();
+                docIdToDocPathMapping.put(docId,docPath);
             }
         }catch(Exception e){
             e.printStackTrace();

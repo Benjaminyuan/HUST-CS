@@ -54,7 +54,7 @@ public class Hit extends AbstractHit {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("docId: %d, docPath: %s, content: %s, score: %lf",
+        sb.append(String.format("docId: %d, docPath: %s, content: %s, score: %.1f\n",
             this.getDocId(),this.getDocPath(),this.getContent(),this.getScore()));
         sb.append("map:\n");
         this.termPostingMapping.forEach((k,v)->{

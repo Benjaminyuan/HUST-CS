@@ -9,9 +9,16 @@ import java.io.ObjectOutputStream;
 public class Term extends AbstractTerm {
 
     private static final long serialVersionUID = 1L;
-
+    public  Term(){
+    }
+    public  Term(String content){
+        this.content = content;
+    }
     @Override
     public boolean equals(Object obj) {
+        if(obj ==  null){
+            return  false;
+        }
         if(obj instanceof AbstractTerm){
             AbstractTerm t = (AbstractTerm) obj;
             return t.getContent().equals(this.getContent());
@@ -26,7 +33,7 @@ public class Term extends AbstractTerm {
     
     @Override
     public String toString() {
-        return "term: "+this.content;
+        return this.content;
     }
 
     @Override

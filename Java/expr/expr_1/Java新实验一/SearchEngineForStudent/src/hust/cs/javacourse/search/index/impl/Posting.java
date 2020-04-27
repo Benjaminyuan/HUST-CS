@@ -5,6 +5,7 @@ import hust.cs.javacourse.search.index.AbstractPosting;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Collections;
 import java.util.List;
 
 public class Posting extends AbstractPosting {
@@ -17,12 +18,16 @@ public class Posting extends AbstractPosting {
 
     public Posting(int docId, int freq, List<Integer> positions){
         super(docId,freq,positions);
+        positions.sort(Integer::compareTo);
     }
     @Override
     public boolean equals(Object obj) {
         if(obj instanceof AbstractPosting){
             AbstractPosting o = (AbstractPosting) obj;
-            return this.docId == o.getDocId();
+            List<Integer> l= o.getPositions();
+            l.sort(Integer::compareTo);
+            o.setPositions(l);
+            return this.docId == o.getDocId() && this.freq == o.getFreq() && positions.equals(o.getPositions());
         }
         return false ;
     }
@@ -64,6 +69,7 @@ public class Posting extends AbstractPosting {
 
     @Override
     public void setPositions(List<Integer> positions) {
+        positions.sort(Integer::compareTo);
         this.positions = positions;
     }
 

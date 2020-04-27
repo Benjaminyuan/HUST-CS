@@ -3,12 +3,13 @@ package hust.cs.javacourse.search.run;
 import hust.cs.javacourse.search.index.AbstractDocument;
 import hust.cs.javacourse.search.index.AbstractDocumentBuilder;
 import hust.cs.javacourse.search.index.AbstractIndex;
-import hust.cs.javacourse.search.index.AbstractIndexBuilder;
 import hust.cs.javacourse.search.index.impl.DocumentBuilder;
 import hust.cs.javacourse.search.index.impl.Index;
-import hust.cs.javacourse.search.util.Config;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 
 
 /**
@@ -21,7 +22,7 @@ public class TestBuildIndex {
      */
     public static String docPath1 = "/Users/mac/Documents/HUST-CS/Java/expr/expr_1/Java新实验一/SearchEngineForStudent/text/1.txt";
     public static String docPath2 = "/Users/mac/Documents/HUST-CS/Java/expr/expr_1/Java新实验一/SearchEngineForStudent/text/2.txt";
-    public static void main(String[] args){
+    public static void main(String[] args) throws Exception {
         AbstractDocumentBuilder documentBuilder = new DocumentBuilder();
         File file1 = new File(docPath1);
         File file2 = new File(docPath2);
@@ -35,5 +36,16 @@ public class TestBuildIndex {
         index.addDocument(d1);
         index.addDocument(d2);
         System.out.println(index.toString());
+        File f = new File("./serial_index");
+        if(!f.exists()){
+            f.createNewFile();
+        }
+        FileOutputStream fileOutputStream = new FileOutputStream(f);
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
+        index.writeObject(objectOutputStream);
+        Index indexFromFile = new Index();
+        indexFromFile.load(f);
+        System.out.println("load from file-----");
+        System.out.println(indexFromFile.toString());
     }
 }
