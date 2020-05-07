@@ -1,0 +1,30 @@
+string int2hex(int x)
+{
+    
+    int cur = 2;
+    char[] res = alloc_array(char,100)  ;
+    res[0] = '0';
+    res[1] = 'x';
+    while(x !=0){
+      int index = x % 16;
+      x /= 16;
+      if( index < 10){
+        res[cur] = char_chr(char_ord('0')+index);
+        cur++ ;
+      }else{
+        res[cur] = char_chr(char_ord('a')+index-10);
+        cur++;
+      }
+    }
+    int start = 2;
+    int end = cur-1;
+    while(start < end){
+        char tmp = res[start];
+        res[start] = res[end];
+        res[end] = tmp;
+        start++;
+        end--;
+    }
+    res[cur] = '\0';
+    return string_from_chararray(res);
+}

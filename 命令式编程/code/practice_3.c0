@@ -1,0 +1,10 @@
+int rem(int x,int y)
+//@requires y>0;
+//@ensures \result=x % y;
+{
+    int tmp_x = x;
+    while(tmp_x >= y){
+        tmp_x -= y;
+    }
+    return tmp_x;
+}
